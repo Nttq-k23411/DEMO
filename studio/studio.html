@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xưởng Sáng Tạo - Gốm Thanh An</title>
+    
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+    <header class="container">
+        <a href="../website/home.html" class="logo">Gốm Thanh An</a> 
+        <nav>
+            <a href="../website/home.html">Trang chủ</a>
+            <a href="#">Sản Phẩm</a>
+            <a href="#">Câu Chuyện</a>
+            <a href="#">Liên Hệ</a>
+        </nav>
+        <div class="header-icons">
+            <i data-lucide="search"></i>
+            <i data-lucide="user"></i>
+            <i data-lucide="heart"></i>
+            <i data-lucide="shopping-cart"></i>
+        </div>
+    </header>
+
+    <main>
+        <div class="container studio-container">
+
+            <div class="studio-preview">
+                <h3>Xưởng Sáng Tạo AI</h3>
+                
+                <div class="main-preview-area">
+                    <div id="image-result">
+                        <img src="../images/coc_tron.jpg" alt="Thiết kế gốm sứ của bạn" data-shape="coc-su">
+                    </div>
+                    
+                    <div class="inspiration-gallery">
+                        <h4>Thư Viện <br> Cảm Hứng</h4>
+                        <div>
+                        <div class="inspiration-grid">
+                            <div class="inspiration-item">
+                                <img src="../images/HASAMI.jpg" alt="Mẫu 1">
+                            </div>
+                            <div class="inspiration-item">
+                                <img src="../images/ly 1.png" alt="Mẫu 2">
+                            </div>
+                            <div class="inspiration-item">
+                                <img src="../images/Generated Image October 19, 2025 - 10_56PM.png" alt="Mẫu 3">
+                            </div>
+                            <div class="inspiration-item">
+                                <img src="../images/lyy.jpg" alt="Mẫu 4">
+                            </div>
+                        </div>
+                            <div class="inspiration-item inspiration-upload-btn" id="upload-inspiration-btn" title="Tải ảnh lên">
+                                <i data-lucide="upload-cloud"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+            </div> <div class="studio-controls">
+                <div class="studio-controls-header">
+                    <h4>Bảng điều khiển</h4>
+                    <div class="icons">
+                        <i data-lucide="undo-2"></i>
+                        <i data-lucide="bookmark"></i>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <label for="select-product-shape">1. Chọn Kiểu Dáng</label>
+                    <select id="select-product-shape" class="studio-select">
+                        <option value="coc-su" selected>Cốc</option>
+                        <option value="binh-hoa">Bình Hoa</option>
+                        <option value="dia-su">Đĩa</option>
+                    </select>
+                </div>
+
+                <div class="control-section">
+                    <label for="prompt-input">2. Hộp Mô Tả (Prompt Box)</label>
+                    <textarea id="prompt-input" rows="4" placeholder="Mô tả phong cách + họa tiết chính + màu sắc chủ đạo + cảm xúc hình ảnh."></textarea>
+                </div>
+
+                <div class="control-section">
+                    <label>3. Công Cụ Tinh Chỉnh</label>
+                    <div class="toggle-option">
+                        <label for="toggle-abstract" style="color:black; font-weight: normal; font-size: 13px">Làm cho hoạ tiết trừu tượng hơn</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-abstract">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-option">
+                        <label for="toggle-gold" style="color:black; font-weight: normal; font-size: 13px">Thêm chi tiết vàng kim</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-gold">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <label for="select-material">4. Chất liệu</label>
+                    <select id="select-material" class="studio-select">
+                        <option value="men-lam">Men lam</option>
+                        <option value="men-ngoc">Men ngọc</option>
+                        <option value="men-ran">Men rạn</option>
+                        <option value="gom-tho">Gốm thô</option>
+                    </select>
+                </div>
+
+                <div class="control-section">
+                    <label for="select-signature">5. Thêm chữ/Ký Xứ</label>
+                    <select id="select-signature" class="studio-select">
+                        <option value="khong">Không thêm</option>
+                        <option value="ky-niem-5-nam">Kỷ niệm 5 năm</option>
+                        <option value="an-khang">An Khang Thịnh Vượng</option>
+                        <option value="custom">Tùy chỉnh...</option>
+                    </select>
+                    <input type="text" id="custom-signature-input" placeholder="Nhập chữ của bạn..." style="display:none;">
+                </div>
+
+                <div class="studio-actions">
+                    <button id="generate-btn">Xác nhận thiết kế</button>
+                    <button id="confirm-btn" disabled>Thêm vào giỏ hàng</button>
+                </div>
+
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-logo">Gốm Thanh An</div>
+            <p>Nơi lưu giữ vẻ đẹp truyền thống trong từng tác phẩm gốm sứ.</p>
+            <div class="footer-socials">
+                <a href="#"><i data-lucide="facebook"></i></a>
+                <a href="#"><i data-lucide="instagram"></i></a>
+                <a href="#"><i data-lucide="youtube"></i></a>
+            </div>
+            <p style="margin-top: 20px; font-size: 14px; color: #aaa;">&copy; 2025 Gốm Thanh An. All Rights Reserved.</p>
+        </div>
+    </footer>
+    <input type="file" id="inspiration-file-input" accept="image/*" style="display: none;">
+
+    <script src="script.js"></script>
+    
+
+</body>
+</html>
