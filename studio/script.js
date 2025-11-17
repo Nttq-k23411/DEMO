@@ -1,11 +1,13 @@
 jQuery(document).ready(function($) {
 
-    const WEBHOOK_URL_LUONG_1 = "https://[URL-Noco-AI-Luồng-1-Sáng-Tạo-Của-Bạn]";
+    const WEBHOOK_URL_LUONG_1 = "https://quyenntt820.app.n8n.cloud/webhook/creative-studio-1";
     const WEBHOOK_URL_LUONG_2 = "https://ai-agent.nocoai.vn/webhook/confirm_order";
 
     const uploadBtn = $('#upload-inspiration-btn');
     const fileInput = $('#inspiration-file-input');
     const inspirationGrid = $('.inspiration-grid'); 
+    const generateBtn = $('#generate-btn'); 
+    const confirmBtn = $('#confirm-btn');  
 
     const baseProductImages = {
         'coc-su': '../images/coc_tron.jpg',
@@ -14,29 +16,36 @@ jQuery(document).ready(function($) {
     };
     
     const inspirationImages = {
-        'coc-su': [
-            '../images/HASAMI.jpg',
-            '../images/ly 1.png',
-            '../images/Generated Image October 19, 2025 - 10_56PM.png',
-            '../images/lyy.jpg'
-        ],
-        'binh-hoa': [
-            '../images/bình 1.jpg',
-            '../images/binh_3.jpg',
-            '../images/bình hoa.jpg',
-            './images/bình tròn.jpg'
-        ],
-        'dia-su': [
-            '../images/đĩa xanh.jpg',
-            '../images/dia_4.jpg',
-            '../images/đĩa.jpg',
-            '../images/đĩa hoa.jpg'
-        ]
+        'coc-su': ['../images/HASAMI.jpg', '../images/ly 1.png', '../images/Generated Image October 19, 2025 - 10_56PM.png', '../images/lyy.jpg'],
+        'binh-hoa': ['../images/bình 1.jpg', '../images/binh_3.jpg', '../images/bình hoa.jpg', '../images/binh_4.jpg'],
+        'dia-su': ['../images/đĩa xanh.jpg', '../images/dia_4.jpg', '../images/đĩa.jpg', '../images/đĩa hoa.jpg']
+    };
+
+    const mockGenImages = {
+        'coc-su': {
+            main: 'https://raw.githubusercontent.com/Nttq-k23411/Images/61273456538206055c55a603f0b017372843c568/demo.png',
+            variants: [
+                '../images/demo1.1.png'
+            ]
+        },
+        'binh-hoa': {
+            main: 'https://raw.githubusercontent.com/Nttq-k23411/Images/29e68c028ec181e6dafad01e74e32b4980d978fe/demo3.png',
+            variants: [
+                '../images/demo3.1.png'
+            ]
+        },
+        'dia-su': {
+            main: 'https://raw.githubusercontent.com/Nttq-k23411/Images/61273456538206055c55a603f0b017372843c568/demo2.png',
+            variants: [
+                '../images/demo2.1.png'
+            ]
+        }
     };
 
     let finalImageUrl = '';
-
     let selectedInspirationUrl = ''; 
+    let isRefining = false; 
+    let refineCount = 0;    
 
     function updateInspirationGallery(shape) {
         const images = inspirationImages[shape];
@@ -50,21 +59,37 @@ jQuery(document).ready(function($) {
                 `;
             });
         }
-        inspirationGrid.html(galleryHtml); 
+        const uploadBtnHtml = `
+            <div class="inspiration-item inspiration-upload-btn" id="upload-inspiration-btn" title="Tải ảnh lên">
+                <i data-lucide="upload-cloud"></i>
+            </div>`;
+            
+        inspirationGrid.html(galleryHtml + uploadBtnHtml); 
+        
         attachInspirationClickEvent();
+        lucide.createIcons();
+
+        $('#upload-inspiration-btn').on('click', function() { fileInput.click(); });
     }
 
     function attachInspirationClickEvent() {
         $('.inspiration-grid .inspiration-item img').off('click').on('click', function() {
             const newSrc = $(this).attr('src');
             $('#image-result img').attr('src', newSrc);
-
             selectedInspirationUrl = newSrc; 
-
-            finalImageUrl = ''; 
-            $('#confirm-btn').prop('disabled', true).text('Thêm vào giỏ hàng');
+ 
+            resetGenerationState();
         });
     }
+
+    function resetGenerationState() {
+        finalImageUrl = ''; 
+        isRefining = false;
+        refineCount = 0;
+        generateBtn.text('Tạo phác thảo').prop('disabled', false);
+        confirmBtn.prop('disabled', true).text('Xác nhận thiết kế');
+    }
+
 
     $('#select-product-shape').on('change', function() {
         const selectedShape = $(this).val();
@@ -72,27 +97,22 @@ jQuery(document).ready(function($) {
         $('#image-result img').attr('src', newBaseImage).attr('data-shape', selectedShape);
         updateInspirationGallery(selectedShape);
         
-        finalImageUrl = ''; 
-        selectedInspirationUrl = '';
-        $('#confirm-btn').prop('disabled', true).text('Thêm vào giỏ hàng');
+        resetGenerationState(); 
     });
 
-    uploadBtn.on('click', function() { fileInput.click(); });
 
+    uploadBtn.on('click', function() { fileInput.click(); });
     fileInput.on('change', function(event) {
         const file = event.target.files[0];
         if (file && file.type.startsWith('image/')) { 
             const reader = new FileReader();
             reader.onload = function(e) {
                 const imageUrl = e.target.result; 
-                const newImageHtml = `...`; 
+                const newImageHtml = `<div class="inspiration-item"><img src="${imageUrl}" alt="Uploaded"></div>`; 
                 inspirationGrid.prepend(newImageHtml);
                 $('#image-result img').attr('src', imageUrl);
-
                 selectedInspirationUrl = imageUrl; 
-
-                finalImageUrl = ''; 
-                $('#confirm-btn').prop('disabled', true).text('Thêm vào giỏ hàng');
+                resetGenerationState();
                 attachInspirationClickEvent();
             }
             reader.readAsDataURL(file); 
@@ -110,74 +130,69 @@ jQuery(document).ready(function($) {
         }
     });
 
-    lucide.createIcons();
-    attachInspirationClickEvent();
-
-    $('#generate-btn').on('click', function() {
+    generateBtn.on('click', function() {
         
-        // 1. Kiểm tra Prompt
+
         const prompt = $('#prompt-input').val();
         if (!prompt) {
             alert('Vui lòng nhập ý tưởng vào Hộp Mô Tả!');
             return;
         }
-
         if (selectedInspirationUrl === '') {
-            alert('Vui lòng chọn 1 ảnh từ Thư viện Cảm hứng (hoặc tải ảnh lên) để AI hiểu rõ phong cách của bạn!');
+            alert('Vui lòng chọn 1 ảnh cảm hứng để AI hiểu phong cách!');
             return;
         }
 
-        $(this).text('Đang tạo...').prop('disabled', true);
-        $('#confirm-btn').prop('disabled', true);
+        if (!isRefining) {
+            $(this).text('Đang tạo...').prop('disabled', true);
+        } else {
+            $(this).text('Đang tinh chỉnh...').prop('disabled', true);
+        }
+        confirmBtn.prop('disabled', true);
 
         const shape = $('#select-product-shape').val(); 
-        const isAbstract = $('#toggle-abstract').is(':checked'); 
-        const hasGold = $('#toggle-gold').is(':checked'); 
-        const material = $('#select-material').val(); 
-        let signature = $('#select-signature').val(); 
-        if (signature === 'custom') {
-            signature = $('#custom-signature-input').val();
-        }
-        
-        const dataToSend_Luong1 = {
+        const dataToSend = {
             shape: shape,
             prompt: prompt,
-            inspiration_image_url: selectedInspirationUrl, 
-            toggle_abstract: isAbstract,
-            toggle_gold: hasGold,
-            material: material,
-            signature: signature
+            inspiration: selectedInspirationUrl, 
+            is_refine_mode: isRefining 
         };
-
-        console.log("Dữ liệu sẽ gửi cho Luồng 1 (Sáng tạo):", dataToSend_Luong1);
+        console.log("Sending to AI:", dataToSend);
 
         setTimeout(() => {
-            const currentShape = $('#select-product-shape').val(); 
-
-            const fakeGithubImages = {
-                'coc-su': 'https://raw.githubusercontent.com/Nttq-k23411/Images/61273456538206055c55a603f0b017372843c568/demo.png',
-                'binh-hoa': 'https://raw.githubusercontent.com/Nttq-k23411/Images/29e68c028ec181e6dafad01e74e32b4980d978fe/demo3.png', 
-                'dia-su': 'https://raw.githubusercontent.com/Nttq-k23411/Images/61273456538206055c55a603f0b017372843c568/demo2.png' 
-            };
+            const currentShapeData = mockGenImages[shape];
             
-            finalImageUrl = fakeGithubImages[currentShape];
+            if (!isRefining) {
+                finalImageUrl = currentShapeData.main;
 
-            $('#image-result img').attr('src', finalImageUrl);
-            $(this).text('Xác nhận thiết kế').prop('disabled', false);
-            $('#confirm-btn').prop('disabled', false);
-        }, 2500);
+                isRefining = true;
+                $(this).text('Tinh chỉnh').prop('disabled', false);
+                
+            } else {
+
+                const variantIndex = refineCount % currentShapeData.variants.length;
+                finalImageUrl = currentShapeData.variants[variantIndex];
+                
+                refineCount++; 
+                $(this).text('Tinh chỉnh').prop('disabled', false);
+            }
+
+            $('#image-result img').fadeOut(200, function() {
+                $(this).attr('src', finalImageUrl).fadeIn(200);
+            });
+
+            confirmBtn.prop('disabled', false);
+            
+        }, 1000); 
     });
 
 
-    $('#confirm-btn').on('click', async function() {
-
+    confirmBtn.on('click', async function() {
         if (!finalImageUrl) {
-            alert('Bạn cần "Xác nhận thiết kế" trước khi thêm vào giỏ hàng.');
-            return;
+            alert('Cần có thiết kế trước khi xác nhận.'); return;
         }
 
         $(this).text('Đang xử lý...').prop('disabled', true);
-
         const customerNameFromSession = "Nguyen Van A"; 
 
         const dataToSend_Luong2 = {
@@ -185,7 +200,6 @@ jQuery(document).ready(function($) {
             order_id: 'DH-' + Date.now(), 
             customer_name: customerNameFromSession, 
             product_id: "GOMSU_001", 
-
             shape: $('#select-product-shape').val(),
             prompt: $('#prompt-input').val(),
             material: $('#select-material').val(),
@@ -195,35 +209,28 @@ jQuery(document).ready(function($) {
             inspiration_image_url: selectedInspirationUrl 
         };
 
-        console.log("Dữ liệu sẽ gửi cho Luồng 2 (Sản xuất):", dataToSend_Luong2);
+        console.log("Order Data:", dataToSend_Luong2);
 
         try {
             const response = await fetch(WEBHOOK_URL_LUONG_2, { 
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dataToSend_Luong2) 
             });
 
-            if (!response.ok) {
-                throw new Error(`Lỗi HTTP: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            if (result.status === 'success') {
-                alert('Đã thêm thiết kế vào giỏ hàng và gửi đến xưởng!');
-                $(this).text('Đã thêm!').prop('disabled', true);
-            } else {
-                throw new Error('Hệ thống xử lý đơn hàng gặp lỗi.');
-            }
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+            
+            alert('Đã thêm thiết kế vào giỏ hàng và gửi đến xưởng!');
+            $(this).text('Đã thêm vào giỏ!').prop('disabled', true);
+            generateBtn.prop('disabled', true); 
 
         } catch (error) {
-            console.error('Lỗi khi gọi Luồng 2:', error);
-            alert('Đã xảy ra lỗi khi chốt đơn: ' + error.message);
-            $(this).text('Thêm vào giỏ hàng').prop('disabled', false);
+            console.error('Error:', error);
+            alert('Lỗi kết nối: ' + error.message);
+            $(this).text('Xác nhận thiết kế').prop('disabled', false);
         }   
     });
 
+    lucide.createIcons();
+    attachInspirationClickEvent();
 });
