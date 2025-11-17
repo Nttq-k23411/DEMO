@@ -25,19 +25,19 @@ jQuery(document).ready(function($) {
         'coc-su': {
             main: 'https://raw.githubusercontent.com/Nttq-k23411/Images/61273456538206055c55a603f0b017372843c568/demo.png',
             variants: [
-                '../images/demo1.1.png'
+                'https://raw.githubusercontent.com/Nttq-k23411/Images/af79e364d889f784abd6023afaba24902868012a/demo1.1.png'
             ]
         },
         'binh-hoa': {
             main: 'https://raw.githubusercontent.com/Nttq-k23411/Images/29e68c028ec181e6dafad01e74e32b4980d978fe/demo3.png',
             variants: [
-                '../images/demo3.1.png'
+                'https://raw.githubusercontent.com/Nttq-k23411/Images/af79e364d889f784abd6023afaba24902868012a/demo3.1.png'
             ]
         },
         'dia-su': {
             main: 'https://raw.githubusercontent.com/Nttq-k23411/Images/61273456538206055c55a603f0b017372843c568/demo2.png',
             variants: [
-                '../images/demo2.1.png'
+                'https://raw.githubusercontent.com/Nttq-k23411/Images/af79e364d889f784abd6023afaba24902868012a/demo2.1.png'
             ]
         }
     };
@@ -183,9 +183,8 @@ jQuery(document).ready(function($) {
 
             confirmBtn.prop('disabled', false);
             
-        }, 1000); 
+        }); 
     });
-
 
     confirmBtn.on('click', async function() {
         if (!finalImageUrl) {
