@@ -28,7 +28,10 @@
             <i data-lucide="search"></i>
             <i data-lucide="user"></i>
             <i data-lucide="heart"></i>
-            <i data-lucide="shopping-cart"></i>
+            <a href="cart.html" class="cart-link active">
+                <i data-lucide="shopping-cart"></i>
+                <span id="cart-badge" class="cart-count" style="display:none">0</span>
+            </a>
         </div>
     </header>
 
@@ -91,7 +94,7 @@
                     <div class="product-info">
                         <h3>Dấu Ấn Sáng Tạo</h3>
                         <p class="price">450.000 VNĐ</p>
-                        <a href="../studio/studio.html" class="btn btn-creative">
+                        <a href="studio.html" class="btn btn-creative">
                             <i data-lucide="brush"></i> Tùy Chỉnh Thiết Kế
                         </a>
                     </div>
@@ -177,7 +180,12 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script>
+        jQuery(document).ready(function($) {
+    lucide.createIcons();
+});
+
+    </script>
     
 </body>
 </html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ Hàng - Gốm Thanh An</title>
+    
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="container">
+        <a href="home.html" class="logo">Gốm Thanh An</a>
+        <nav>
+            <a href="home.html">Trang chủ</a>
+            <a href="#">Sản Phẩm</a>
+            <a href="#">Câu Chuyện</a>
+            <a href="#">Liên Hệ</a>
+        </nav>
+        <div class="header-icons">
+            <i data-lucide="search"></i>
+            <i data-lucide="user"></i>
+            <i data-lucide="heart"></i>
+            <div style="position: relative;">
+                <a href="cart.html" style="color: inherit;"><i data-lucide="shopping-cart"></i></a>
+                <span id="cart-badge" class="cart-count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h2 class="page-title">Giỏ hàng của bạn</h2>
+                <p class="page-subtitle">Kiểm tra lại các sản phẩm bạn đã chọn</p>
+            </div>
+
+            <div class="cart-container">
+                
+                <div class="cart-items-box">
+                    <table class="cart-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50%;">Sản phẩm</th>
+                                <th style="width: 15%;">Đơn giá</th>
+                                <th style="width: 20%;">Số lượng</th>
+                                <th style="width: 15%;">Thành tiền</th>
+                                <th style="width: 5%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-body">
+                            </tbody>
+                    </table>
+
+                    <div id="empty-cart-state" style="display: none; text-align: center; padding: 50px;">
+                        <i data-lucide="shopping-bag" style="width: 48px; height: 48px; color: #ccc; margin-bottom: 15px;"></i>
+                        <p style="color: #666;">Giỏ hàng của bạn đang trống</p>
+                        <a href="home.html" class="btn-link">Quay lại cửa hàng</a>
+                    </div>
+
+                    <div class="cart-footer-actions">
+                        <a href="studio.html" class="continue-shopping">
+                            <i data-lucide="arrow-left"></i> Tiếp tục thiết kế
+                        </a>
+                    </div>
+                </div>
+
+                <div class="cart-summary-box">
+                    <div class="studio-controls-header">
+                        <h4>Tóm tắt đơn hàng</h4>
+                    </div>
+
+                    <div class="summary-details">
+                        <div class="summary-row">
+                            <span>Tạm tính</span>
+                            <span id="subtotal-price">0 ₫</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Vận chuyển</span>
+                            <span>Miễn phí</span>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="summary-row total">
+                            <span>Tổng cộng</span>
+                            <span id="total-price" class="highlight-price">0 ₫</span>
+                        </div>
+                    </div>
+
+                    <div class="studio-actions" style="flex-direction: column;">
+                        <button id="btn-checkout" class="gradient-btn">Thanh toán ngay</button>
+                    </div>
+
+                    <div class="secure-info">
+                        <i data-lucide="shield-check"></i>
+                        <span>Bảo mật thanh toán 100%</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-logo">Gốm Thanh An</div>
+            <p>Nơi lưu giữ vẻ đẹp truyền thống trong từng tác phẩm gốm sứ.</p>
+            <div class="footer-socials">
+                <a href="#"><i data-lucide="facebook"></i></a>
+                <a href="#"><i data-lucide="instagram"></i></a>
+                <a href="#"><i data-lucide="youtube"></i></a>
+            </div>
+            <p style="margin-top: 20px; font-size: 14px; color: #aaa;">&copy; 2025 Gốm Thanh An. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        
+        $(document).ready(function() {
+            const WEBHOOK_URL_ORDER = "https://ai-agent.nocoai.vn/webhook/confirm_order"; 
+
+            lucide.createIcons();
+            renderCart();
+            function renderCart() {
+                const cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+                const cartBody = $('#cart-body');
+                const emptyState = $('#empty-cart-state');
+                const table = $('.cart-table');
+                
+                $('#cart-badge').text(cart.length);
+
+                if (cart.length === 0) {
+                    table.hide();
+                    $('.cart-summary-box').hide();
+                    emptyState.show();
+                    return;
+                }
+
+                table.show();
+                $('.cart-summary-box').show();
+                emptyState.hide();
+                cartBody.empty();
+                
+                let subtotal = 0;
+
+                cart.forEach((item, index) => {
+                    const itemTotal = item.price * item.quantity;
+                    subtotal += itemTotal;
+
+                    let detailsHtml = '';
+                    if (item.details) {
+                        detailsHtml = `
+                            <div class="item-specs">
+                                <span class="spec-tag">${item.material || 'Gốm'}</span>
+                                ${item.details.gold ? '<span class="spec-tag gold">Mạ vàng</span>' : ''}
+                                ${item.details.signature ? '<span class="spec-tag sig">Có chữ ký</span>' : ''}
+                            </div>
+                        `;
+                    }
+
+                    const imgSrc = item.preview_url; 
+
+                    const row = `
+                        <tr>
+                            <td>
+                                <div class="cart-item-info">
+                                    <div class="item-img-wrapper">
+                                        <img src="${imgSrc}" 
+                                             alt="${item.product_name}" 
+                                             onerror="this.onerror=null; this.src='../../images/coc_tron.jpg'">
+                                    </div>
+                                    <div class="item-text">
+                                        <h5>${item.product_name}</h5>
+                                        <p class="item-shape">Kiểu dáng: ${item.shape}</p>
+                                        ${detailsHtml}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="price-col">${item.price.toLocaleString('vi-VN')} ₫</td>
+                            <td>
+                                <div class="qty-control">
+                                    <button onclick="updateQty(${index}, -1)">-</button>
+                                    <input type="text" value="${item.quantity}" readonly>
+                                    <button onclick="updateQty(${index}, 1)">+</button>
+                                </div>
+                            </td>
+                            <td class="total-col">${itemTotal.toLocaleString('vi-VN')} ₫</td>
+                            <td>
+                                <i data-lucide="trash-2" class="trash-icon" onclick="removeItem(${index})"></i>
+                            </td>
+                        </tr>
+                    `;
+                    cartBody.append(row);
+                });
+                
+                updateSummary(subtotal);
+                lucide.createIcons();
+            }
+
+            function updateSummary(subtotal) {
+                const shippingFee = 0;
+                const total = subtotal + shippingFee;
+
+                $('#subtotal-price').text(subtotal.toLocaleString('vi-VN') + ' ₫');
+                $('#total-price').text(total.toLocaleString('vi-VN') + ' ₫');
+                $('#total-price').data('value', total);
+            }
+
+            window.updateQty = function(index, change) {
+                let cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+                if (cart[index].quantity + change > 0) {
+                    cart[index].quantity += change;
+                    localStorage.setItem('shoppingCart', JSON.stringify(cart));
+                    renderCart();
+                }
+            };
+
+            window.removeItem = function(index) {
+                if(confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
+                    let cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+                    cart.splice(index, 1);
+                    localStorage.setItem('shoppingCart', JSON.stringify(cart));
+                    renderCart();
+                }
+            };
+
+            $('#btn-checkout').click(async function() {
+                let cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+                
+                if(cart.length === 0) { 
+                    alert("Giỏ hàng trống!"); return; 
+                }
+                
+                const customerName = prompt("Nhập họ tên người nhận hàng:", "Nguyen Van A");
+                if (!customerName) return; 
+
+                const originalText = $(this).text();
+                $(this).text('Đang gửi đơn hàng...').prop('disabled', true);
+
+                const orderData = {
+                    order_id: 'DH-' + Date.now(),
+                    customer_name: customerName,
+                    items: cart, 
+                    total_price: $('#total-price').data('value'),
+                    note: "Đơn hàng từ Website Gốm Thanh An"
+                };
+
+                console.log("Sending Order:", orderData);
+
+                try {
+                    const response = await fetch(WEBHOOK_URL_ORDER, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(orderData)
+                    });
+
+                    if (response.ok) {
+                        alert("✅ Đặt hàng thành công! Chúng tôi sẽ sớm liên hệ.");
+                        localStorage.removeItem('shoppingCart');
+                        renderCart(); 
+                    } else {
+                        throw new Error('Lỗi server n8n');
+                    }
+                } catch (error) {
+                    alert("❌ Có lỗi xảy ra: " + error.message);
+                } finally {
+                    $(this).text(originalText).prop('disabled', false);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
