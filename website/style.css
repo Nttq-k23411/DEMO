@@ -66,6 +66,7 @@ nav a:hover { color: var(--primary-color); }
     display: flex;
     align-items: center;
     gap: 20px;
+    padding-right: 40px; 
 }
 
 .header-icons i { cursor: pointer; transition: color 0.2s; }
