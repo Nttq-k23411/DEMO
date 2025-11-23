@@ -274,7 +274,7 @@ footer {
 }
 .studio-controls-header h4 {
     font-family: var(--font-heading);
-    font-size: 20px; color: var(--primary-color); margin: 0;
+    font-size: 16px; color: var(--primary-color); margin: 0;
 }
 .studio-controls-header .icons { color: var(--secondary-color); display: flex; gap: 15px; }
 
@@ -343,8 +343,10 @@ input:checked + .slider:before { transform: translateX(20px); }
     text-align: left; padding-bottom: 15px;
     border-bottom: 2px solid var(--border-color);
     color: var(--secondary-color); font-family: var(--font-heading); font-size: 16px;
+
 }
-.cart-table td { padding: 20px 0; border-bottom: 1px solid #eee; vertical-align: top; }
+.cart-table td { padding: 20px 0; border-bottom: 1px solid #eee;     vertical-align: middle;
+    align-items: center; }
 
 .cart-item-info { display: flex; gap: 15px; }
 .item-img-wrapper {

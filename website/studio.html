@@ -188,7 +188,7 @@
     function updateInspirationGallery(shape) {
         const images = inspirationImages[shape];
 
-        const uploadBtnHtml = `<div class="inspiration-item inspiration-upload-btn" id="upload-inspiration-btn" title="Tải ảnh lên"><i data-lucide="upload-cloud"></i></div>`;
+        const uploadButtonInGrid = inspirationGrid.find('.inspiration-upload-btn').detach();
         
         let galleryHtml = '';
         if (images && images.length > 0) {
@@ -197,13 +197,10 @@
             });
         }
 
-        inspirationGrid.html(galleryHtml + uploadBtnHtml); 
+        inspirationGrid.html(galleryHtml); 
+        
+        inspirationGrid.append(uploadButtonInGrid);
 
-        $('#upload-inspiration-btn').on('click', function() {
-            fileInput.click();
-        });
-
-        if(typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     function attachInspirationClickEvent() {

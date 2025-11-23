@@ -45,8 +45,8 @@
                         <thead>
                             <tr>
                                 <th style="width: 50%;">Sản phẩm</th>
-                                <th style="width: 15%;">Đơn giá</th>
-                                <th style="width: 20%;">Số lượng</th>
+                                <th style="width: 18%;">Đơn giá</th>
+                                <th style="width: 18%;">Số lượng</th>
                                 <th style="width: 15%;">Thành tiền</th>
                                 <th style="width: 5%;"></th>
                             </tr>
@@ -254,90 +254,90 @@
                 }
             };
 
-const modal = $('#checkout-modal');
-const confirmCheckoutBtn = $('#confirm-checkout-btn');
-const closeBtn = $('.close-btn');
-const checkoutError = $('#checkout-error');
+            const modal = $('#checkout-modal');
+            const confirmCheckoutBtn = $('#confirm-checkout-btn');
+            const closeBtn = $('.close-btn');
+            const checkoutError = $('#checkout-error');
 
-function showModal() {
-    modal.css('display', 'flex');
+            function showModal() {
+                modal.css('display', 'flex');
 
-    $('#customer-name-input').val('');
-    $('#customer-phone-input').val('');
-    $('#customer-address-input').val('');
-    checkoutError.hide();
-}
+                $('#customer-name-input').val('');
+                $('#customer-phone-input').val('');
+                $('#customer-address-input').val('');
+                checkoutError.hide();
+            }
 
-function hideModal() {
-    modal.css('display', 'none');
-}
+            function hideModal() {
+                modal.css('display', 'none');
+            }
 
-closeBtn.on('click', hideModal);
-$(window).on('click', function(event) {
-    if ($(event.target).is(modal)) {
-        hideModal();
-    }
-});
+            closeBtn.on('click', hideModal);
+            $(window).on('click', function(event) {
+                if ($(event.target).is(modal)) {
+                    hideModal();
+                }
+            });
 
-$('#btn-checkout').off('click').click(function() {
-    let cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
-    if(cart.length === 0) { 
-        alert("Giỏ hàng trống!"); 
-        return; 
-    }
-    showModal();
-});
+            $('#btn-checkout').off('click').click(function() {
+                let cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+                if(cart.length === 0) { 
+                    alert("Giỏ hàng trống!"); 
+                    return; 
+                }
+                showModal();
+            });
 
-confirmCheckoutBtn.off('click').click(async function() {
-    const customerName = $('#customer-name-input').val().trim();
-    const customerPhone = $('#customer-phone-input').val().trim();
-    const customerAddress = $('#customer-address-input').val().trim();
+            confirmCheckoutBtn.off('click').click(async function() {
+                const customerName = $('#customer-name-input').val().trim();
+                const customerPhone = $('#customer-phone-input').val().trim();
+                const customerAddress = $('#customer-address-input').val().trim();
 
-    if (!customerName || !customerPhone || !customerAddress) {
-        checkoutError.text("Vui lòng điền đầy đủ các trường (*).").show();
-        return;
-    }
-    
-    checkoutError.hide();
-    hideModal(); 
+                if (!customerName || !customerPhone || !customerAddress) {
+                    checkoutError.text("Vui lòng điền đầy đủ các trường (*).").show();
+                    return;
+                }
+                
+                checkoutError.hide();
+                hideModal(); 
 
-    const customerInfo = `Tên: ${customerName} | SĐT: ${customerPhone} | Địa chỉ: ${customerAddress}`;
+                const customerInfo = `Tên: ${customerName} | SĐT: ${customerPhone} | Địa chỉ: ${customerAddress}`;
 
-    let cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
-    const originalText = $('#btn-checkout').text();
-    $('#btn-checkout').text('Đang gửi đơn hàng...').prop('disabled', true);
+                let cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+                const originalText = $('#btn-checkout').text();
+                $('#btn-checkout').text('Đang gửi đơn hàng...').prop('disabled', true);
 
-    const orderData = {
-        order_id: 'DH-' + Date.now(),
-        customer_info: customerInfo, 
-        items: cart, 
-        total_price: $('#total-price').data('value'),
-        note: "Đơn hàng từ Website Gốm Thanh An"
-    };
+                const orderData = {
+                    order_id: 'DH-' + Date.now(),
+                    customer_info: customerInfo, 
+                    items: cart, 
+                    total_price: $('#total-price').data('value'),
+                    note: "Đơn hàng từ Website Gốm Thanh An"
+                };
 
-    console.log("Sending Order:", orderData);
+                console.log("Sending Order:", orderData);
 
-    try {
-        const response = await fetch(WEBHOOK_URL_ORDER, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(orderData)
-        });
+                try {
+                    const response = await fetch(WEBHOOK_URL_ORDER, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(orderData)
+                    });
 
-        if (response.ok) {
-            alert("Đặt hàng thành công! Chúng tôi sẽ sớm liên hệ.");
-            localStorage.removeItem('shoppingCart');
-            renderCart(); 
-        } else {
-            throw new Error('Lỗi server N8N');
-        }
-    } catch (error) {
-        alert("Có lỗi xảy ra: " + error.message);
-    } finally {
-        $('#btn-checkout').text(originalText).prop('disabled', false);
-    }
-});
-        });
+                    if (response.ok) {
+                        alert("Đặt hàng thành công! Chúng tôi sẽ sớm liên hệ.");
+                        localStorage.removeItem('shoppingCart');
+                        renderCart(); 
+                    } else {
+                        throw new Error('Lỗi server');
+                    }
+                } catch (error) {
+                    alert("Có lỗi xảy ra: " + error.message);
+                } finally {
+                    $('#btn-checkout').text(originalText).prop('disabled', false);
+                }
+            });
+                    });
     </script>
 </body>
 </html>
