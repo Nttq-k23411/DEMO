@@ -328,7 +328,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 
 .page-header { margin-top: 30px; margin-bottom: 20px; }
-.page-title { font-family: var(--font-heading); font-size: 32px; color: var(--primary-color); margin: 0; }
+.page-title { font-family: var(--font-heading); font-size: 24px; color: var(--primary-color); margin: 0; }
 .page-subtitle { color: var(--secondary-color); font-size: 14px; margin-top: 5px; }
 
 .cart-container {
@@ -465,4 +465,79 @@ input:checked + .slider:before { transform: translateX(20px); }
     .cart-table td { padding: 5px 0; border: none; }
     .cart-item-info { align-items: center; }
     .qty-control { margin-top: 0; }
+}
+
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.4); 
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%; 
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.modal-content h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.modal-content p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    cursor: pointer;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: #333;
+    text-decoration: none;
+}
+
+.modal-content .control-section {
+    margin-bottom: 15px;
+}
+
+.modal-content .control-section label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.modal-content .control-section input,
+.modal-content .control-section textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
 }

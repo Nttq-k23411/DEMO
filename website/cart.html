@@ -101,6 +101,34 @@
 
             </div>
         </div>
+
+        <div id="checkout-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h4>Thông tin giao hàng</h4>
+                <p>Vui lòng điền đầy đủ thông tin để hoàn tất đơn hàng.</p>
+                
+                <div class="control-section">
+                    <label for="customer-name-input">Họ và tên người nhận (*)</label>
+                    <input type="text" id="customer-name-input" placeholder="Nguyễn Văn A">
+                </div>
+                
+                <div class="control-section">
+                    <label for="customer-phone-input">Số điện thoại (*)</label>
+                    <input type="tel" id="customer-phone-input" placeholder="0901234567">
+                </div>
+                
+                <div class="control-section">
+                    <label for="customer-address-input">Địa chỉ chi tiết (*)</label>
+                    <textarea id="customer-address-input" rows="3" placeholder="Số nhà, tên đường, Phường/Xã, Quận/Huyện, Tỉnh/Thành phố"></textarea>
+                </div>
+                
+                <div class="studio-actions" style="margin-top: 20px;">
+                    <button id="confirm-checkout-btn" class="gradient-btn">Xác nhận và Đặt hàng</button>
+                </div>
+                <p id="checkout-error" style="color: red; font-size: 13px; margin-top: 10px; display: none;">Vui lòng điền đầy đủ các trường (*).</p>
+            </div>
+        </div>
     </main>
     
     <footer>
@@ -226,49 +254,89 @@
                 }
             };
 
-            $('#btn-checkout').click(async function() {
-                let cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
-                
-                if(cart.length === 0) { 
-                    alert("Giỏ hàng trống!"); return; 
-                }
-                
-                const customerName = prompt("Nhập họ tên người nhận hàng:", "Nguyen Van A");
-                if (!customerName) return; 
+const modal = $('#checkout-modal');
+const confirmCheckoutBtn = $('#confirm-checkout-btn');
+const closeBtn = $('.close-btn');
+const checkoutError = $('#checkout-error');
 
-                const originalText = $(this).text();
-                $(this).text('Đang gửi đơn hàng...').prop('disabled', true);
+function showModal() {
+    modal.css('display', 'flex');
 
-                const orderData = {
-                    order_id: 'DH-' + Date.now(),
-                    customer_name: customerName,
-                    items: cart, 
-                    total_price: $('#total-price').data('value'),
-                    note: "Đơn hàng từ Website Gốm Thanh An"
-                };
+    $('#customer-name-input').val('');
+    $('#customer-phone-input').val('');
+    $('#customer-address-input').val('');
+    checkoutError.hide();
+}
 
-                console.log("Sending Order:", orderData);
+function hideModal() {
+    modal.css('display', 'none');
+}
 
-                try {
-                    const response = await fetch(WEBHOOK_URL_ORDER, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(orderData)
-                    });
+closeBtn.on('click', hideModal);
+$(window).on('click', function(event) {
+    if ($(event.target).is(modal)) {
+        hideModal();
+    }
+});
 
-                    if (response.ok) {
-                        alert("✅ Đặt hàng thành công! Chúng tôi sẽ sớm liên hệ.");
-                        localStorage.removeItem('shoppingCart');
-                        renderCart(); 
-                    } else {
-                        throw new Error('Lỗi server n8n');
-                    }
-                } catch (error) {
-                    alert("❌ Có lỗi xảy ra: " + error.message);
-                } finally {
-                    $(this).text(originalText).prop('disabled', false);
-                }
-            });
+$('#btn-checkout').off('click').click(function() {
+    let cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+    if(cart.length === 0) { 
+        alert("Giỏ hàng trống!"); 
+        return; 
+    }
+    showModal();
+});
+
+confirmCheckoutBtn.off('click').click(async function() {
+    const customerName = $('#customer-name-input').val().trim();
+    const customerPhone = $('#customer-phone-input').val().trim();
+    const customerAddress = $('#customer-address-input').val().trim();
+
+    if (!customerName || !customerPhone || !customerAddress) {
+        checkoutError.text("Vui lòng điền đầy đủ các trường (*).").show();
+        return;
+    }
+    
+    checkoutError.hide();
+    hideModal(); 
+
+    const customerInfo = `Tên: ${customerName} | SĐT: ${customerPhone} | Địa chỉ: ${customerAddress}`;
+
+    let cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+    const originalText = $('#btn-checkout').text();
+    $('#btn-checkout').text('Đang gửi đơn hàng...').prop('disabled', true);
+
+    const orderData = {
+        order_id: 'DH-' + Date.now(),
+        customer_info: customerInfo, 
+        items: cart, 
+        total_price: $('#total-price').data('value'),
+        note: "Đơn hàng từ Website Gốm Thanh An"
+    };
+
+    console.log("Sending Order:", orderData);
+
+    try {
+        const response = await fetch(WEBHOOK_URL_ORDER, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        });
+
+        if (response.ok) {
+            alert("Đặt hàng thành công! Chúng tôi sẽ sớm liên hệ.");
+            localStorage.removeItem('shoppingCart');
+            renderCart(); 
+        } else {
+            throw new Error('Lỗi server N8N');
+        }
+    } catch (error) {
+        alert("Có lỗi xảy ra: " + error.message);
+    } finally {
+        $('#btn-checkout').text(originalText).prop('disabled', false);
+    }
+});
         });
     </script>
 </body>

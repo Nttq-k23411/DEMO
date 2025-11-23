@@ -165,7 +165,8 @@
     const fileInput = $('#inspiration-file-input');
     const inspirationGrid = $('.inspiration-grid'); 
     const generateBtn = $('#generate-btn'); 
-    const confirmBtn = $('#confirm-btn');   
+    const confirmBtn = $('#confirm-btn');    
+    const imageResult = $('#image-result img'); 
 
     const baseProductImages = {
         'coc-su': '../images/coc_tron.jpg',
@@ -184,53 +185,93 @@
     let selectedInspirationUrl = ''; 
     let isRefining = false; 
 
+    function updateInspirationGallery(shape) {
+        const images = inspirationImages[shape];
 
-function updateInspirationGallery(shape) {
+        const uploadBtnHtml = `<div class="inspiration-item inspiration-upload-btn" id="upload-inspiration-btn" title="Tải ảnh lên"><i data-lucide="upload-cloud"></i></div>`;
+        
+        let galleryHtml = '';
+        if (images && images.length > 0) {
+            images.forEach((imgUrl, index) => {
+                galleryHtml += `<div class="inspiration-item"><img src="${imgUrl}" alt="Mẫu ${index}"></div>`;
+            });
+        }
 
-    const images = inspirationImages[shape];
-    let galleryHtml = '';
+        inspirationGrid.html(galleryHtml + uploadBtnHtml); 
 
-    if (images && images.length > 0) {
-        images.forEach((imgUrl, index) => {
-            galleryHtml += `<div class="inspiration-item"><img src="${imgUrl}" alt="Mẫu ${index}"></div>`;
+        $('#upload-inspiration-btn').on('click', function() {
+            fileInput.click();
         });
-    }
-    inspirationGrid.html(galleryHtml); 
 
-}
+        if(typeof lucide !== 'undefined') lucide.createIcons();
+    }
 
     function attachInspirationClickEvent() {
         $('.inspiration-grid .inspiration-item img').off('click').on('click', function() {
             const newSrc = $(this).attr('src');
-            $('#image-result img').attr('src', newSrc);
+
+            imageResult.attr('src', newSrc);
+
             selectedInspirationUrl = newSrc; 
-            resetGenerationState();
+            
+            console.log("Đã chọn ảnh cảm hứng:", selectedInspirationUrl);
+            resetGenerationState(false); 
         });
     }
 
-    function resetGenerationState() {
+    function resetGenerationState(resetToDefaultImage = true) {
         finalImageUrl = ''; 
         finalImageBlob = null;
         isRefining = false;
+        
         generateBtn.text('Tạo phác thảo').prop('disabled', false);
         confirmBtn.prop('disabled', true).text('Thêm vào giỏ hàng'); 
+
+        if (resetToDefaultImage) {
+             const currentShape = $('#select-product-shape').val();
+             imageResult.attr('src', baseProductImages[currentShape]);
+             selectedInspirationUrl = '';
+        }
     }
 
-function getSignatureValue() {
-    const selectedVal = $('#select-signature').val();
-
-    if (selectedVal === 'custom') return $('#custom-signature-input').val();
-
-    if (selectedVal === 'khong') return ''; 
+    function getSignatureValue() {
+        const selectedVal = $('#select-signature').val();
+        if (selectedVal === 'custom') return $('#custom-signature-input').val();
+        if (selectedVal === 'khong') return ''; 
+        return selectedVal;
+    }
     
-    return selectedVal;
-}
+    function updateCartCount() {
+        const cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+        const count = cart.length;
+        const badge = $('#cart-badge'); 
+        
+        if(count > 0) {
+            badge.text(count).show();
+        } else {
+            badge.hide();
+        }
+    }
+    
+    function showToast() {
+        const x = document.getElementById("toast-box");
+        if(x) {
+            x.className = "show";
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+        }
+    }
+
 
     $('#select-product-shape').on('change', function() {
         const selectedShape = $(this).val();
-        $('#image-result img').attr('src', baseProductImages[selectedShape]);
+        
+        console.log("Đổi shape sang:", selectedShape);
+
+        resetGenerationState(true);
+
         updateInspirationGallery(selectedShape);
-        resetGenerationState(); 
+
+        attachInspirationClickEvent();
     });
 
     uploadBtn.on('click', function() { fileInput.click(); });
@@ -243,10 +284,12 @@ function getSignatureValue() {
                  const imageUrl = e.target.result; 
                  const newImageHtml = `<div class="inspiration-item"><img src="${imageUrl}" alt="Uploaded"></div>`; 
                  inspirationGrid.prepend(newImageHtml);
-                 $('#image-result img').attr('src', imageUrl);
+
+                 imageResult.attr('src', imageUrl);
                  selectedInspirationUrl = imageUrl; 
-                 resetGenerationState();
+
                  attachInspirationClickEvent();
+                 resetGenerationState(false);
              }
              reader.readAsDataURL(file); 
          }
@@ -258,13 +301,53 @@ function getSignatureValue() {
         else $('#custom-signature-input').hide();
     });
 
-    generateBtn.on('click', async function() {
-        const prompt = $('#prompt-input').val();
+async function getBase64FromImage(imgElement) {
 
-        if (!prompt) { alert('Vui lòng nhập ý tưởng!'); return; }
+    if (finalImageBlob && imgElement.src.startsWith('blob:')) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result); 
+            reader.onerror = reject;
+            reader.readAsDataURL(finalImageBlob);
+        });
+    }
 
-        $(this).text('AI đang vẽ ...').prop('disabled', true);
-        confirmBtn.prop('disabled', true);
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous'; 
+        img.src = imgElement.src;
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/jpeg', 0.8)); 
+        };
+        img.onerror = (err) => reject(err);
+    });
+}
+
+generateBtn.on('click', async function() {
+    const prompt = $('#prompt-input').val();
+    // if (!prompt) { alert('Vui lòng nhập ý tưởng!'); return; }
+
+    const btnOriginalText = $(this).text();
+    $(this).text('AI đang tạo...').prop('disabled', true);
+    confirmBtn.prop('disabled', true);
+
+    try {
+        let inputImageBase64 = "";
+        
+        const currentImgElement = document.querySelector('#image-result img');
+        const currentSrc = currentImgElement.src;
+
+        const isDefault = Object.values(baseProductImages).some(path => currentSrc.includes(path.replace('../', '')));
+        
+        if (!isDefault) {
+             console.log("Phát hiện chế độ Tinh chỉnh: Đang xử lý ảnh đầu vào...");
+             inputImageBase64 = await getBase64FromImage(currentImgElement);
+        }
 
         const inputData = {
             prompt: prompt,
@@ -273,59 +356,37 @@ function getSignatureValue() {
             toggle_abstract: $('#toggle-abstract').is(':checked'),
             toggle_gold: $('#toggle-gold').is(':checked'),
             signature: getSignatureValue(),
-            inspiration_image: selectedInspirationUrl 
+            inspiration_image: inputImageBase64 
         };
 
-        console.log("Đang gọi Workflow 1...", inputData);
+        console.log("Gửi dữ liệu lên N8N...", inputData);
 
-        try {
-            const response = await fetch(WEBHOOK_URL_LUONG_1, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(inputData)
-            });
+        const response = await fetch(WEBHOOK_URL_LUONG_1, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(inputData)
+        });
 
-            if (!response.ok) throw new Error('Lỗi kết nối');
+        if (!response.ok) throw new Error('Lỗi kết nối N8N');
 
-            const imageBlob = await response.blob();
+        const imageBlob = await response.blob();
+        finalImageUrl = URL.createObjectURL(imageBlob);
+        finalImageBlob = imageBlob; 
 
-            finalImageUrl = URL.createObjectURL(imageBlob);
-            finalImageBlob = imageBlob; 
+        $('#image-result img').fadeOut(200, function() {
+            $(this).attr('src', finalImageUrl).fadeIn(200);
+        });
 
-            $('#image-result img').fadeOut(200, function() {
-                $(this).attr('src', finalImageUrl).fadeIn(200);
-            });
+        $(this).text('Tinh chỉnh tiếp').prop('disabled', false);
+        confirmBtn.prop('disabled', false).text('Thêm vào giỏ hàng');
+        isRefining = true;
 
-            $(this).text('Tinh chỉnh').prop('disabled', false);
-            confirmBtn.prop('disabled', false).text('Thêm vào giỏ hàng');
-            isRefining = true;
-
-        } catch (error) {
-            console.error('Lỗi tạo ảnh:', error);
-            alert('AI đang bận, thử lại sau nhé! (Lỗi: ' + error.message + ')');
-            $(this).text('Tạo phác thảo').prop('disabled', false);
-        }
-    });
-
-    function updateCartCount() {
-        const cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
-        const count = cart.length;
-        const badge = $('#cart-badge'); 
-        
-        if(count > 0) {
-            badge.text(count).show();
-        } else {
-            badge.hide();
-        }
+    } catch (error) {
+        console.error('Lỗi:', error);
+        alert('Có lỗi xảy ra: ' + error.message);
+        $(this).text(btnOriginalText).prop('disabled', false);
     }
-
-    updateCartCount();
-
-    function showToast() {
-        const x = document.getElementById("toast-box");
-        x.className = "show";
-        setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
-    }
+});
 
     confirmBtn.on('click', function() {
         if (!finalImageBlob) { alert("Chưa có ảnh!"); return; }
@@ -364,6 +425,7 @@ function getSignatureValue() {
                 updateCartCount();
                 showToast();
                 $('#confirm-btn').text('Đã thêm ✔').prop('disabled', true);
+
                 setTimeout(() => {
                     $('#confirm-btn').text('Thêm vào giỏ hàng'); 
                 }, 2000);
@@ -374,6 +436,8 @@ function getSignatureValue() {
             }
         }
     });
+
+    updateCartCount();
     lucide.createIcons();
     attachInspirationClickEvent();
 });
