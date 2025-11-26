@@ -8,7 +8,7 @@ studio.html: "Xưởng Sáng Tạo AI" – đây là giao diện cốt lõi cho 
 
 cart.html: Khi khách hàng hoàn tất việc tùy chỉnh thiết kế và nhấn nút "Thanh Toán", giao diện này sẽ kích hoạt Workflow 2.
 
-3. KẾT QUẢ
+2. KẾT QUẢ
    
 Tài liệu Báo cáo: Dữ liệu giao dịch và log lệnh sản xuất được ghi lại tại Google Sheet.
 
