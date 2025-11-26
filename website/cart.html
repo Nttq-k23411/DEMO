@@ -147,7 +147,7 @@
     <script>
         
         $(document).ready(function() {
-            const WEBHOOK_URL_ORDER = "https://ai-agent.nocoai.vn/webhook/confirm_order"; 
+            const WEBHOOK_URL_ORDER = "https://quyenntt820.app.n8n.cloud/webhook/confirm_order"; 
 
             lucide.createIcons();
             renderCart();
@@ -310,6 +310,7 @@
                 const orderData = {
                     order_id: 'DH-' + Date.now(),
                     customer_info: customerInfo, 
+                    customer_name: customerName, 
                     items: cart, 
                     total_price: $('#total-price').data('value'),
                     note: "Đơn hàng từ Website Gốm Thanh An"
